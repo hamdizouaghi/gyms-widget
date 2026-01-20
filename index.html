@@ -2,106 +2,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gyms Directory</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gyms</title>
 
 <style>
-  :root {
+  :root{
     --card-radius: 16px;
     --card-bg: #fff;
     --card-border: #e5e7eb;
     --shadow: 0 2px 12px rgba(0,0,0,0.08);
+
     --text-muted: #6b7280;
-    sans-serif;
-    margin: 16px;
-    background: #fafafa;
+    --text-strong: #111827;
+    --accent: #f5a623; /* stars color */
   }
 
-  #filters-bar {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
+  body { font-family: Arial, sans-serif; margin:16px; }
+
+  /* Top filters bar */
+  #filters-bar{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
   }
-  .filter-select {
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    background: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    min-width: 140px;
+  .filter-select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    padding:10px 14px;
+    border:1px solid #d1d5db;
+    border-radius:10px;
+    background:#fff;
+    color:#111827;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    min-width:140px;
   }
 
+  /* Grid */
   #gyms {
     display: grid;
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
     gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  @media (max-width:1200px){
+    #gyms { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
+  }
+  @media (max-width:680px){
+    #gyms { grid-template-columns: 1fr; }
   }
 
-  .gym-card {
-    background: var(--card-bg);
+  /* Card */
+  .gym-card{
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--card-border);
     border-radius: var(--card-radius);
-    border: 1px solid var(--card-border);
+    background: var(--card-bg);
     box-shadow: var(--shadow);
-    overflow: hidden;
+    overflow:hidden; /* round image corners at top */
   }
 
-  .gym-cover {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    display: block;
-    background: #ddd;
+  /* Cover image on top */
+  .gym-cover{
+    width:100%;
+    height:200px;           /* adjust if you want taller image (e.g. 220–260px) */
+    object-fit:cover;
+    display:block;
+  }
+  .cover-placeholder{
+    width:100%;
+    height:200px;
+    background: linear-gradient(135deg, #eee, #ddd);
   }
 
-  .gym-info {
-    padding: 14px 16px;
+  /* Info section */
+  .gym-info{
+    padding:12px 16px 16px;
   }
 
-  .gym-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: var(--text-strong);
+  .gym-title{
+    font-size:14px;
+    color:#111827;
+    margin:8px 0 6px;
   }
 
-  .gym-line {
-    font-size: 14px;
-    margin-top: 3px;
-  }
-  .gym-line span {
-    color: var(--text-muted);
-  }
-
-  .rating-label {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 10px;
+  .gym-city{
+    font-size:18px;
+    font-weight:700;
+    color:var(--text-strong);
+    margin:0 0 6px;
   }
 
-  .stars {
+  .gym-line{
+    font-size:14px;
+    color:#111827;
+    margin:2px 0;
+  }
+  .gym-line.muted{
+    color:var(--text-muted);
+  }
+
+  /* Rating */
+  .rating-label{
+    font-size:13px;
+    color:var(--text-muted);
+    margin-top:8px;
+    margin-bottom:4px;
+  }
+  .stars{
     color: var(--accent);
-    font-size: 18px;
+    font-size:16px;
+    letter-spacing:1px;
   }
 
-  /* Pagination */
+  /* tiny carousel dots (visual only) */
+  .dots{
+    position:relative;
+    top:-14px;
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    align-items:center;
+  }
+  .dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:#ddd;
+  }
+  .dot.active{ background:#bbb; }
+
+  /* Pager */
   #pager {
-    margin: 20px 0;
-    text-align: center;
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .pager-btn {
     padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    margin: 0 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
     background: #fff;
+    color: #111827;
+    font-size: 14px;
     cursor: pointer;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
   }
   .pager-btn:disabled {
-    opacity: .5;
+    opacity: 0.5;
     cursor: not-allowed;
+  }
+  .pager-status {
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 4px 8px;
   }
 </style>
 </head>
@@ -113,23 +173,19 @@
 <div id="pager"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', function() {
+  /* ======== CONFIG ======== */
+  const SHEET_URL = "https://opensheet.elk.sh/1-M0Olh2CNmzAkNrQAYC246cJAPkElQZcEh9aLfYbb54/Sheet1";
+  const PAGE_SIZE = 12; // Show exactly 10 per page
 
-  const SHEET_URL =
-    "https://opensheet.elk.sh/1-M0Olh2CNmzAkNrQAYC246cJAPkElQZcEh9aLfYbb54/Sheet1";
-
+  /* ======== DOM ======== */
   const gymsContainer = document.getElementById("gyms");
   const filtersBar = document.getElementById("filters-bar");
   const pagerContainer = document.getElementById("pager");
 
-  let gymsData = [];
-  let filteredData = [];
-  let currentPage = 1;
-  const PAGE_SIZE = 12;
-
-  /* ---------------- FILTERS BAR ---------------- */
+  /* ======== FILTERS BAR ======== */
   filtersBar.innerHTML = `
-    <select id="googleRating" class="filter-select">
+    <select id="googleRating" class="filter-select" aria-label="Google rating">
       <option value="0">Google rating</option>
       <option value="1">★ 1+</option>
       <option value="2">★ 2+</option>
@@ -139,51 +195,93 @@ document.addEventListener("DOMContentLoaded", () => {
       <option value="5">★ 5</option>
     </select>
 
-    <select id="governance" class="filter-select">
+    <select id="governance" class="filter-select" aria-label="Governorate">
       <option value="">Governorate</option>
-      <option>Ariana</option><option>Béja</option>
-      <option>Ben Arous</option><option>Bizerte</option>
-      <option>Gabès</option><option>Gafsa</option>
-      <option>Jendouba</option><option>Kairouan</option>
-      <option>Kasserine</option><option>Kebili</option>
-      <option>Kef</option><option>Mahdia</option>
-      <option>Manouba</option><option>Medenine</option>
-     >
-      <option>Sfax</option><option>Sidi Bouzid</option>
-      <option>Siliana</option><option>Sousse</option>
-      <option>Tataouine</option><option>Tozeur</option>
-      <option>Tunis</option><option>Zaghouan</option>
+      <option value="Ariana">Ariana</option>
+      <option value="Béja">Béja</option>
+      <option value="Ben Arous">Ben Arous</option>
+      <option value="Bizerte">Bizerte</option>
+      <option value="Gabès">Gabès</option>
+      <option value="Gafsa">Gafsa</option>
+      <option value="Jendouba">Jendouba</option>
+      <option value="Kairouan">Kairouan</option>
+      <option value="Kasserine">Kasserine</option>
+      <option value="Kebili">Kebili</option>
+      <option value="Kef">Kef</option>
+      <option value="Mahdia">Mahdia</option>
+      <option value="Manouba">Manouba</option>
+      <option value="Medenine">Medenine</option>
+      <option value="Monastir">Monastir</option>
+      <option value="Nabeul">Nabeul</option>
+      <option value="Sfax">Sfax</option>
+      <option value="Sidi Bouzid">Sidi Bouzid</option>
+      <option value="Siliana">Siliana</option>
+      <option value="Sousse">Sousse</option>
+      <option value="Tataouine">Tataouine</option>
+      <option value="Tozeur">Tozeur</option>
+      <option value="Tunis">Tunis</option>
+      <option value="Zaghouan">Zaghouan</option>
     </select>
 
-    <select id="cityFilter" class="filter-select" disabled>
+    <select id="cityFilter" class="filter-select" aria-label="City" disabled>
       <option value="">City</option>
     </select>
- .getElementById("cityFilter");
+  `;
 
-  /* ---------------- FETCH SHEET ---------------- */
+  /* ======== STATE ======== */
+  const googleRatingSelect = document.getElementById("googleRating");
+  const governanceSelect   = document.getElementById("governance");
+  const cityFilterSelect   = document.getElementById("cityFilter");
+
+  let gymsData = [];      // raw from sheet (normalized)
+  let filteredData = [];  // after filters
+  let currentPage = 1;
+
+  /* ======== FETCH ======== */
   fetch(SHEET_URL)
     .then(res => res.json())
     .then(data => {
-      gymsData = data.map(row => ({
-        ...row,
-        Image: (row.image ?? row.Image ?? "").trim(),
-        _rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
-      }));
+      // Normalize rating + unify "Image" prop from sheet "image"/"Image"
+      gymsData = data.map(row => {
+        const rawImage = (row.image ?? row.Image ?? "").toString().trim();
+        return {
+          ...row,
+          Image: rawImage, // unified name
+          _rateNum: parseFloat(
+            String(row.Rate || "")
+              .replace(",", ".")
+              .replace(/[^0-9.]/g, "")
+          ),
+        };
+      });
 
-     >";
+      refreshCityOptions();
+      applyFiltersAndRender();
+    })
+    .catch(err => {
+      console.error("Failed to load sheet data:", err);
+      gymsContainer.innerHTML = `<p style="color:#b00;">Failed to load gyms. Please try again later.</p>`;
     });
 
-  /* ---------------- FILTER LOGIC ---------------- */
-  function applyFilters() {
-    const minRate = parseFloat(ratingSelect.value);
-    const gov = govSelect.value.trim();
-    const city = citySelect.value.trim();
+  /* ======== FILTERS ======== */
+  function applyFiltersAndRender(){
+    const minRate = parseFloat(googleRatingSelect.value || "0");
+    const govVal  = (governanceSelect.value || "").trim();
+    const cityVal = (cityFilterSelect.value || "").trim();
 
-    filteredData = gymsData.filter(g => {
-      let okRate = isNaN(minRate) || minRate === 0 || g._rateNum >= minRate;
-      let okGov = !gov || g.Governorate === gov;
-      let okCity = !city || g.City === city;
-      return okRate && okGov && okCity;
+    filteredData = gymsData.filter(gym => {
+      // Rating
+      const passRating = !isFinite(minRate) || minRate === 0
+        ? true
+        : (isFinite(gym._rateNum) && gym._rateNum >= minRate);
+
+      // Governorate
+      const passGov = govVal === "" ? true : String(gym.Governorate || "").trim() === govVal;
+
+      // City
+      const passCity = cityVal === "" ? true : String(gym.City || "").trim() === cityVal;
+
+      return passRating && passGov && passCity;
     });
 
     currentPage = 1;
@@ -191,99 +289,218 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function refreshCityOptions() {
-    const gov = govSelect.value.trim();
-    if (!gov) {
-      citySelect.disabled = true;
-      citySelect.innerHTML = `<option value="">City</option>`;
+    const govVal = String(governanceSelect.value || "").trim();
+
+    if (!govVal) {
+      cityFilterSelect.innerHTML = `<option value="">City</option>`;
+      cityFilterSelect.disabled = true;
+      cityFilterSelect.value = "";
       return;
     }
 
-    const cities = [...new Set(
-      gymsData.filter(g => g.Governorate === gov).map(g => g.City)
-    )].sort();
+    const citySet = new Set(
+      gymsData
+        .filter(g => String(g.Governorate || "").trim() === govVal)
+        .map(g => String(g.City || "").trim())
+        .filter(v => v.length > 0)
+    );
 
-    citySelect.disabled = false;
-    citySelect.innerHTML =
-      `<option value="">City</option>` +
-      cities.map(c => `<option>${c}</option>`).join("");
+    const optionsHtml = ['<option value="">City</option>']
+      .concat([...citySet].sort().map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`))
+      .join('');
+
+    const prev = cityFilterSelect.value;
+    cityFilterSelect.innerHTML = optionsHtml;
+    cityFilterSelect.disabled = false;
+
+    if (prev && citySet.has(prev)) {
+      cityFilterSelect.value = prev;
+    } else {
+      cityFilterSelect.value = "";
+    }
   }
 
-  ratingSelect.onchange = applyFilters;
-  govSelect.onchange = () => { refreshCityOptions(); applyFilters(); };
-  citySelect.onchange = applyFilters;
+  googleRatingSelect.addEventListener("change", applyFiltersAndRender);
+  governanceSelect.addEventListener("change", () => {
+    refreshCityOptions();
+    applyFiltersAndRender();
+  });
+  cityFilterSelect.addEventListener("change", applyFiltersAndRender);
 
-  /* ---------------- PAGE RENDER ---------------- */
-  function renderPage() {
+  /* ======== PAGING ======== */
+  function renderPage(){
     const total = filteredData.length;
-    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    currentPage = Math.min(Math.max(1, currentPage), totalPages);
 
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const slice = filteredData.slice(start, start + PAGE_SIZE);
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const endIdx = Math.min(startIdx + PAGE_SIZE, total);
+    const slice = filteredData.slice(startIdx, endIdx);
 
     renderGyms(slice);
-    renderPager(totalPages);
+    renderPager(total, totalPages, startIdx, endIdx);
   }
 
-  function renderPager(totalPages) {
-    if (totalPages <= 1) {
+  function renderPager(total, totalPages, startIdx, endIdx){
+    // Hide the pager if there is only one page or no results
+    if (totalPages <= 1 || total === 0) {
       pagerContainer.innerHTML = "";
       return;
     }
+
+    const prevDisabled = currentPage <= 1 ? "disabled" : "";
+    const nextDisabled = currentPage >= totalPages ? "disabled" : "";
+
     pagerContainer.innerHTML = `
-      <button class="pager-btn" id="prev" ${currentPage===1?"disabled":""}>Previous</button>
-      <button class="pager-btn" id="next" ${currentPage===totalPages?"disabled":""}>Next</button>
+      <button class="pager-btn" id="btnPrev" ${prevDisabled} aria-label="Previous page">Previous</button>
+      <span class="pager-status">Page ${currentPage} of ${totalPages} • Showing ${startIdx + 1}–${endIdx} of ${total}</span>
+      <button class="pager-btn" id="btnNext" ${nextDisabled} aria-label="Next page">Next</button>
     `;
-    document.getElementById("prev").onclick = () => { currentPage--; renderPage(); };
-    document.getElementById("next").onclick = () => { currentPage++; renderPage(); };
+
+    const btnPrev = document.getElementById("btnPrev");
+    const btnNext = document.getElementById("btnNext");
+
+    if (btnPrev) {
+      btnPrev.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderPage();
+        }
+      });
+    }
+
+    if (btnNext) {
+      btnNext.addEventListener("click", () => {
+        const tp = Math.ceil(total / PAGE_SIZE);
+        if (currentPage < tp) {
+          currentPage++;
+          renderPage();
+        }
+      });
+    }
+
+    // Optional: keyboard shortcuts ←/→ for pagination (bind once)
+    if (!window.__pagerKeysBound) {
+      window.__pagerKeysBound = true;
+      document.addEventListener("keydown", (e) => {
+        const tag = (e.target && e.target.tagName) || "";
+        // Avoid interfering with inputs/selects
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+
+        if (e.key === "ArrowLeft") {
+          if (currentPage > 1) {
+            currentPage--;
+            renderPage();
+          }
+        } else if (e.key === "ArrowRight") {
+          const tp = Math.ceil(total / PAGE_SIZE);
+          if (currentPage < tp) {
+            currentPage++;
+            renderPage();
+          }
+        }
+      });
+    }
   }
 
-  /* ---------------- UTILITIES ---------------- */
-  function normalizeImage(url) {
-    if (!url) return "";
-    const file = url.match(/\/d\/([A-Za-z0-9_-]+)/);
-    if (file) return `https://lh3.googleusercontent.com/d/${file[1]}`;
-    const id = url.match(/id=([A-Za-z0-9_-]+)/);
-    if (id) return `https://lh3.googleusercontent.com/d/${id[1]}`;
-    return url;
+  /* ======== HELPERS ======== */
+  function normalizeImageUrl(url) {
+    const u = String(url).trim();
+
+    // Convert Google Drive "file/d/<id>/view" to direct image
+    const mFile = u.match(/drive\.google\.com\/file\/d\/([-\w]{25,})/);
+    if (mFile) {
+      return `https://drive.google.com/uc?export=view&id=${mFile[1]}`;
+    }
+
+    // Convert any link that has ?id=<id>
+    const mId = u.match(/[?&]id=([-\w]{25,})/);
+    if (mId) {
+      return `https://drive.google.com/uc?export=view&id=${mId[1]}`;
+    }
+
+    // Already a direct (uc?export=view) or a normal image URL
+    return u;
   }
 
-  function firstImage(url) {
-    if (!url) return "";
-    const parts = url.split(/[|\s]+/).filter(Boolean);
-    return normalizeImage(parts[0]);
+  function firstImageUrl(raw) {
+    if (!raw) return "";
+    // Your sheet shows multiple links separated by spaces; some rows can use '|'
+    // Split on pipe or whitespace (one or more)
+    const parts = String(raw).split(/[|\s]+/).map(s => s.trim()).filter(Boolean);
+    if (parts.length === 0) return "";
+    return normalizeImageUrl(parts[0]);
   }
 
-  function stars(v) {
-    if (!v) return "N/A";
-    const f = Math.floor(v);
-    const half = (v - f >= .5) ? 1 : 0;
-    const empty = 5 - f - half;
-    return "★".repeat(f) + (half ? "☆" : "") + "✩".repeat(empty);
+  function getStars(rate){
+    const max = 5;
+    const full = Math.floor(rate);
+    const half = (rate - full >= 0.5) ? 1 : 0;
+    const empty = max - full - half;
+    return `${"★".repeat(full)}${half ? "☆" : ""}${"✩".repeat(empty)}`;
   }
 
-  /* ---------------- RENDER CARDS ---------------- */
-  function renderGyms(list) {
-    if (!list.length) {
-      gymsContainer.innerHTML = "<p>No results.</p>";
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  /* ======== RENDER ======== */
+  function renderGyms(list){
+    if (!list || list.length === 0){
+      gymsContainer.innerHTML = `<p>No results</p>`;
       return;
     }
 
-    gymsContainer.innerHTML = list.map(g => `
-      <div class="gym-card">
-        ${firstImage(g.Image)}
-        <div class="gym-info">
-          <div class="gym-title">${g.Name}</div>
-          <div class="gym-line">Governorate: <span>${g.Governorate}</span></div>
-          <div class="gym-line">City: <span>${g.City}</span></div>
-          <div class="rating-label">Google Rating</div>
-          <div class="stars">${stars(g._rateNum)}</div>
-        </div>
-      </div>
-    `).join("");
-  }
+    let html = "";
+    list.forEach(gym => {
+      // ✅ Only one image (the first), normalized
+      const coverUrl = firstImageUrl(gym.Image);
 
+      const rateVal = isFinite(gym._rateNum) ? gym._rateNum : null;
+      const gymName = escapeHtml(gym.Name || '');
+
+      html += `
+        <article class="gym-card">
+          ${
+            coverUrl
+              ? `<img classml(coverUrl)}`
+              : `<div class="cover-placeholder" aria-hidden="true"></div>`
+          }
+
+          <div class="dots" aria-hidden="true">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+
+          <div class="gym-info">
+            <div class="gym-title">${gymName}</div>
+
+            <div class="gym-line">
+              Governorate <span class="gym-sep">|</span>
+              <span class="gym-line muted">${escapeHtml(gym.Governorate || '')}</span>
+              <span class="gym-sep">|</span>
+              City <span class="gym-sep">|</span>
+              <span class="gym-line muted">${escapeHtml(gym.City || '')}</span>
+            </div>
+
+            <div class="rating-label">Google Rating</div>
+            <div class="stars">${rateVal !== null ? getStars(rateVal) : 'N/A'}</div>
+          </div>
+
+        </article>
+      `;
+    });
+
+    gymsContainer.innerHTML = html;
+  }
 });
 </script>
-
 </body>
 </html>
