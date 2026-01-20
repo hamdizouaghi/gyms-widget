@@ -295,28 +295,89 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------------- RENDER CARDS ---------------- */
+  
+<script>
+  // ---- Google Drive helpers ----
+  function extractDriveId(url) {
+    if (!url) return "";
+    const m1 = url.match(/\/d\/([A-Za-z0-9_-]{25,})/);
+    if (m1) return m1[1];
+    const m2 = url.match(/[?&]id=([A-Za-z0-9_-]{25,})/);
+    return m2 ? m2[1] : "";
+  }
+
+  function toLh3Url(id) {
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : "";
+  }
+
+  function toThumbUrl(id, size = 1200) {
+    return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${size}` : "";
+  }
+
+  function firstImageUrl(raw) {
+    if (!raw) return "";
+    const parts = String(raw).split(/[|\s]+/).filter(Boolean);
+    if (!parts.length) return "";
+    const id = extractDriveId(parts[0]);
+    return id ? toLh3Url(id) : parts[0]; // prefer lh3
+  }
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
+</script>
+
+
+<script>
   function renderGyms(list) {
-    if (!list.length) {
+    if (!list || list.length === 0) {
       gymsContainer.innerHTML = "<p>No results.</p>";
       return;
     }
 
-    gymsContainer.innerHTML = list.map(g => `
-      <div class="gym-card">
-        ${firstImage(g.Image)}
-        <div class="gym-info">
-          <div class="gym-title">${g.Name}</div>
-          <div class="gym-line">Governorate: <span>${g.Governorate}</span></div>
-          <div class="gym-line">City: <span>${g.City}</span></div>
-          <div class="rating-label">Google Rating</div>
-          <div class="stars">${stars(g._rateNum)}</div>
-        </div>
-      </div>
-    `).join("");
-  }
+    const cardsHtml = list.map(g => {
+      const raw = g.Image || "";
+      const first = firstImageUrl(raw);
+      const id   = extractDriveId(raw) || extractDriveId(first);
+      const name = escapeHtml(g.Name || "");
+      const gov  = escapeHtml(g.Governorate || "");
+      const city = escapeHtml(g.City || "");
 
-});
+      // NOTE: no stray "${first}" outside <img>. Only the <img> element below.
+      return `
+        <article class="gym-card">
+          <img class="gym-cover"
+               src="${first}"
+               alt="${name}"
+                     <div class="gym-line">Governorate: <span>${gov}</span></div>
+            <div class="gym-line">City: <span>${city}</span></div>
+            <div class="rating-label">Google Rating</div>
+            <div class="stars">${stars(g._rateNum)}</div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    gymsContainer.innerHTML = cardsHtml;
+
+    // Fallback: if lh3 fails, try Google Drive thumbnail endpoint
+    gymsContainer.querySelectorAll("img.gym-cover").forEach(img => {
+      img.addEventListener("error", () => {
+        const id = img.getAttribute("data-id") || extractDriveId(img.src);
+        const fallback = toThumbUrl(id, 1200);
+        if (fallback && img.src !== fallback) {
+          img.src = fallback;
+        }
+      });
+    });
+  }
 </script>
+
 
 </body>
 </html>
