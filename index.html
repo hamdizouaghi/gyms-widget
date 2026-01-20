@@ -14,9 +14,24 @@
     --shadow: 0 2px 12px rgba(0,0,0,0.08);
     --text-muted: #6b7280;
     --accent: #f5a623;
-  1px solid #d1d5db;
-    border-radius: 10px;
-    background: #fff;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    margin: 16px;
+    background: #fafafa;
+  }
+
+  #filters-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .filter-select {
+    padding: 10px 14px;
+   ;
     font-size: 14px;
     cursor: pointer;
     min-width: 140px;
@@ -40,7 +55,6 @@
     width: 100%;
     height: 200px;
     object-fit: cover;
-    display: block;
     background: #ddd;
   }
 
@@ -50,14 +64,13 @@
 
   .gym-title {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: bold;
     margin-bottom: 6px;
-    color: #111827;
   }
 
   .gym-line {
     font-size: 14px;
-    margin-top: 3px;
+    margin-top: 4px;
   }
 
   .gym-line span {
@@ -67,12 +80,12 @@
   .rating-label {
     font-size: 13px;
     color: var(--text-muted);
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .stars {
-    color: var(--accent);
     font-size: 18px;
+    color: var(--accent);
   }
 
   #pager {
@@ -82,11 +95,11 @@
 
   .pager-btn {
     padding: 8px 12px;
+    background: #fff;
     border: 1px solid #ccc;
     border-radius: 6px;
-    margin: 0 8px;
-    background: #fff;
     cursor: pointer;
+    margin: 0 6px;
   }
 
   .pager-btn:disabled {
@@ -117,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   const PAGE_SIZE = 12;
 
+  /* ---------------- FILTERS UI ---------------- */
   filtersBar.innerHTML = `
     <select id="googleRating" class="filter-select">
       <option value="0">Google rating</option>
@@ -136,10 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <option>Bizerte</option>
       <option>Gabès</option>
       <option>Gafsa</option>
-      <option>Jendouba</option>
-      <option>Kairouan</option>
-      <option>Kasserine</option>
-      <option>Kebili</option>
+     >Kebili</option>
       <option>Kef</option>
       <option>Mahdia</option>
       <option>Manouba</option>
@@ -165,24 +176,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const govSelect = document.getElementById("governance");
   const citySelect = document.getElementById("cityFilter");
 
+  /* ---------------- LOAD DATA ---------------- */
   fetch(SHEET_URL)
-   rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
+    .then(res => res.json())
+    .then(data => {
+      gymsData = data.map(row => ({
+        ...row,
+        Image: (row.image ?? row.Image ?? "").trim(),
+        _rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
       }));
-
       refreshCityOptions();
       applyFilters();
     });
 
+  /* ---------------- FILTER LOGIC ---------------- */
   function applyFilters() {
     const minRate = parseFloat(ratingSelect.value);
     const gov = govSelect.value.trim();
     const city = citySelect.value.trim();
 
     filteredData = gymsData.filter(g => {
-      let okRate = isNaN(minRate) || minRate === 0 || g._rateNum >= minRate;
-      let okGov = !gov || g.Governorate === gov;
-      let okCity = !city || g.City === city;
-      return okRate && okGov && okCity;
+      return (
+        (!minRate || g._rateNum >= minRate) &&
+        (!gov || g.Governorate === gov) &&
+        (!city || g.City === city)
+      );
     });
 
     currentPage = 1;
@@ -191,6 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function refreshCityOptions() {
     const gov = govSelect.value.trim();
+
     if (!gov) {
       citySelect.disabled = true;
       citySelect.innerHTML = `<option value="">City</option>`;
@@ -198,7 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const cities = [...new Set(
-      gymsData.filter(g => g.Governorate === gov).map(g => g.City)
+      gymsData
+        .filter(g => g.Governorate === gov)
+        .map(g => g.City)
     )].sort();
 
     citySelect.disabled = false;
@@ -208,15 +229,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   ratingSelect.onchange = applyFilters;
-  govSelect.onchange = () => { refreshCityOptions(); applyFilters(); };
+  govSelect.onchange = () => {
+    refreshCityOptions();
+    applyFilters();
+  };
   citySelect.onchange = applyFilters;
 
+  /* ---------------- PAGINATION ---------------- */
   function renderPage() {
     const total = filteredData.length;
     const totalPages = Math.ceil(total / PAGE_SIZE);
 
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const slice = filteredData.slice(start, start + PAGE_SIZE);
+    const slice = filteredData.slice(
+      (currentPage - 1) * PAGE_SIZE,
+      currentPage * PAGE_SIZE
+    );
 
     renderGyms(slice);
     renderPager(totalPages);
@@ -227,14 +254,24 @@ document.addEventListener("DOMContentLoaded", () => {
       pagerContainer.innerHTML = "";
       return;
     }
+
     pagerContainer.innerHTML = `
-      <button class="pager-btn" id="prev" ${currentPage===1?"disabled":""}>Previous</button>
-      <button class="pager-btn" id="next" ${currentPage===totalPages?"disabled":""}>Next</button>
+      <button id="prev" class="pager-btn" ${currentPage === 1 ? "disabled" : ""}>Previous</button>
+      <button id="next" class="pager-btn" ${currentPage === totalPages ? "disabled" : ""}>Next</button>
     `;
-    document.getElementById("prev").onclick = () => { currentPage--; renderPage(); };
-    document.getElementById("next").onclick = () => { currentPage++; renderPage(); };
+
+    document.getElementById("prev").onclick = () => {
+      currentPage--;
+      renderPage();
+    };
+
+    document.getElementById("next").onclick = () => {
+      currentPage++;
+      renderPage();
+    };
   }
 
+  /* ---------------- IMAGE NORMALIZATION ---------------- */
   function normalizeImage(url) {
     if (!url) return "";
     const file = url.match(/\/d\/([A-Za-z0-9_-]+)/);
@@ -252,12 +289,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function stars(v) {
     if (!v) return "N/A";
-    const f = Math.floor(v);
-    const half = (v - f >= .5) ? 1 : 0;
-    const empty = 5 - f - half;
-    return "★".repeat(f) + (half ? "☆" : "") + "✩".repeat(empty);
+    return "★".repeat(Math.floor(v)) +
+           ((v % 1 >= 0.5) ? "☆" : "") +
+           "✩".repeat(5 - Math.ceil(v));
   }
 
+  /* ---------------- RENDER CARDS ---------------- */
   function renderGyms(list) {
     if (!list.length) {
       gymsContainer.innerHTML = "<p>No results.</p>";
