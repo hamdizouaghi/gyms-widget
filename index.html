@@ -10,8 +10,8 @@
   :root {
     --card-radius: 16px;
     --card-bg: #fff;
-    --card-border: #e6e6e6;
-    --shadow: 0 4px 14px rgba(0,0,0,0.08);
+    --card-border: #e5e7eb;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
     --text-muted: #6b7280;
     --accent: #f5a623;
   }
@@ -19,7 +19,7 @@
   body {
     font-family: Arial, sans-serif;
     margin: 16px;
-    background: #f5f5f5;
+    background: #fafafa;
   }
 
   #filters-bar {
@@ -31,11 +31,10 @@
 
   .filter-select {
     padding: 10px 14px;
-    border: 1px solidd1d5db;
-    border-radius: 10px;
+   ;
     font-size: 14px;
     cursor: pointer;
-    background: #fff;
+    min-width: 140px;
   }
 
   #gyms {
@@ -57,7 +56,6 @@
     height: 200px;
     object-fit: cover;
     background: #ddd;
-    display: block;
   }
 
   .gym-info {
@@ -72,7 +70,7 @@
 
   .gym-line {
     font-size: 14px;
-    margin: 4px 0;
+    margin-top: 4px;
   }
 
   .gym-line span {
@@ -106,6 +104,7 @@
 
   .pager-btn:disabled {
     opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>
 </head>
@@ -124,14 +123,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const gymsContainer = document.getElementById("gyms");
   const filtersBar = document.getElementById("filters-bar");
-  const pager = document.getElementById("pager");
+  const pagerContainer = document.getElementById("pager");
 
   let gymsData = [];
   let filteredData = [];
   let currentPage = 1;
   const PAGE_SIZE = 12;
 
-  /* ---------------------------------- FILTER BAR ---------------------------------- */
+  /* ---------------- FILTERS UI ---------------- */
   filtersBar.innerHTML = `
     <select id="googleRating" class="filter-select">
       <option value="0">Google rating</option>
@@ -143,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <option value="5">★ 5</option>
     </select>
 
-    <select id="governorate" class="filter-select">
+    <select id="governance" class="filter-select">
       <option value="">Governorate</option>
       <option>Ariana</option>
       <option>Béja</option>
@@ -151,10 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <option>Bizerte</option>
       <option>Gabès</option>
       <option>Gafsa</option>
-      <option>Jendouba</option>
-      <option>Kairouan</option>
-      <option>Kasserine</option>
-      <option>Kebili</option>
+     >Kebili</option>
       <option>Kef</option>
       <option>Mahdia</option>
       <option>Manouba</option>
@@ -177,58 +173,42 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
 
   const ratingSelect = document.getElementById("googleRating");
-  const govSelect = document.getElementById("governorate");
+  const govSelect = document.getElementById("governance");
   const citySelect = document.getElementById("cityFilter");
 
-  /* ---------------------------------- HELPERS ---------------------------------- */
-
- d\/([A-Za-z0-9_-]{25,})/);
-    if (m) return m[1];
-    m = url.match(/id=([A-Za-z0-9_-]{25,})/);
-    return m ? m[1] : "";
-  }
-
-  function driveLh3(id) {
-    return `https://lh3.googleusercontent.com/d/${id}`;
-  }
-
-  function driveThumb(id) {
-    return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
-  }
-
-  function getImage(raw) {
-    if (!raw) return "";
-    const parts = raw.split(/[|\s]+/).filter(Boolean);
-    const id = extractDriveId(parts[0]);
-    if (!id) return "";
-
-    return driveLh3(id);
-  }
-
-  function stars(rate) {
-    if (!rate) return "N/A";
-    let full = Math.floor(rate);
-    let half = (rate - full >= 0.5) ? 1 : 0;
-    let empty = 5 - full - half;
-    return "★".repeat(full) + (half ? "☆" : "") + "✩".repeat(empty);
-  }
-
-  /* ---------------------------------- LOAD DATA ---------------------------------- */
+  /* ---------------- LOAD DATA ---------------- */
   fetch(SHEET_URL)
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
-      gymsData = data.map(g => ({
-        ...g,
-        Image: (g.Image ?? g.image ?? "").trim(),
-        _rateNum: parseFloat(String(g.Rate || "").replace(",", "."))
+      gymsData = data.map(row => ({
+        ...row,
+        Image: (row.image ?? row.Image ?? "").trim(),
+        _rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
       }));
-      updateCities();
+      refreshCityOptions();
       applyFilters();
     });
 
-  /* ---------------------------------- FILTERS ---------------------------------- */
-  function updateCities() {
-    const gov = govSelect.value;
+  /* ---------------- FILTER LOGIC ---------------- */
+  function applyFilters() {
+    const minRate = parseFloat(ratingSelect.value);
+    const gov = govSelect.value.trim();
+    const city = citySelect.value.trim();
+
+    filteredData = gymsData.filter(g => {
+      return (
+        (!minRate || g._rateNum >= minRate) &&
+        (!gov || g.Governorate === gov) &&
+        (!city || g.City === city)
+      );
+    });
+
+    currentPage = 1;
+    renderPage();
+  }
+
+  function refreshCityOptions() {
+    const gov = govSelect.value.trim();
 
     if (!gov) {
       citySelect.disabled = true;
@@ -243,79 +223,96 @@ document.addEventListener("DOMContentLoaded", () => {
     )].sort();
 
     citySelect.disabled = false;
-    citySelect.innerHTML = `<option value="">City</option>` +
+    citySelect.innerHTML =
+      `<option value="">City</option>` +
       cities.map(c => `<option>${c}</option>`).join("");
   }
 
-  function applyFilters() {
-    const rate = parseFloat(ratingSelect.value);
-    const gov = govSelect.value;
-    const city = citySelect.value;
+  ratingSelect.onchange = applyFilters;
+  govSelect.onchange = () => {
+    refreshCityOptions();
+    applyFilters();
+  };
+  citySelect.onchange = applyFilters;
 
-    filteredData = gymsData.filter(g =>
-      (!rate || g._rateNum >= rate) &&
-      (!gov || g.Governorate === gov) &&
-      (!city || g.City === city)
+  /* ---------------- PAGINATION ---------------- */
+  function renderPage() {
+    const total = filteredData.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+
+    const slice = filteredData.slice(
+      (currentPage - 1) * PAGE_SIZE,
+      currentPage * PAGE_SIZE
     );
 
-    currentPage = 1;
-    renderPage();
-  }
-
-  ratingSelect.addEventListener("change", applyFilters);
-  govSelect.addEventListener("change", () => { updateCities(); applyFilters(); });
-  citySelect.addEventListener("change", applyFilters);
-
-  /* ---------------------------------- PAGINATION ---------------------------------- */
-  function renderPage() {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const slice = filteredData.slice(start, start + PAGE_SIZE);
     renderGyms(slice);
-    renderPager();
+    renderPager(totalPages);
   }
 
-  function renderPager() {
-    const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-
+  function renderPager(totalPages) {
     if (totalPages <= 1) {
-      pager.innerHTML = "";
+      pagerContainer.innerHTML = "";
       return;
     }
 
-    pager.innerHTML = `
-      <button class="pager-btn" id="prev" ${currentPage === 1 ? "disabled" : ""}>Previous</button>
-      <button class="pager-btn" id="next" ${currentPage >= totalPages ? "disabled" : ""}>Next</button>
+    pagerContainer.innerHTML = `
+      <button id="prev" class="pager-btn" ${currentPage === 1 ? "disabled" : ""}>Previous</button>
+      <button id="next" class="pager-btn" ${currentPage === totalPages ? "disabled" : ""}>Next</button>
     `;
 
-    document.getElementById("prev").onclick = () => { currentPage--; renderPage(); };
-    document.getElementById("next").onclick = () => { currentPage++; renderPage(); };
+    document.getElementById("prev").onclick = () => {
+      currentPage--;
+      renderPage();
+    };
+
+    document.getElementById("next").onclick = () => {
+      currentPage++;
+      renderPage();
+    };
   }
 
-  /* ---------------------------------- RENDER CARDS ---------------------------------- */
+  /* ---------------- IMAGE NORMALIZATION ---------------- */
+  function normalizeImage(url) {
+    if (!url) return "";
+    const file = url.match(/\/d\/([A-Za-z0-9_-]+)/);
+    if (file) return `https://lh3.googleusercontent.com/d/${file[1]}`;
+    const id = url.match(/id=([A-Za-z0-9_-]+)/);
+    if (id) return `https://lh3.googleusercontent.com/d/${id[1]}`;
+    return url;
+  }
+
+  function firstImage(url) {
+    if (!url) return "";
+    const parts = url.split(/[|\s]+/).filter(Boolean);
+    return normalizeImage(parts[0]);
+  }
+
+  function stars(v) {
+    if (!v) return "N/A";
+    return "★".repeat(Math.floor(v)) +
+           ((v % 1 >= 0.5) ? "☆" : "") +
+           "✩".repeat(5 - Math.ceil(v));
+  }
+
+  /* ---------------- RENDER CARDS ---------------- */
   function renderGyms(list) {
     if (!list.length) {
       gymsContainer.innerHTML = "<p>No results.</p>";
       return;
     }
 
-    gymsContainer.innerHTML = list.map(g => {
-      const raw = g.Image || "";
-      const id = extractDriveId(raw);
-      let url = id ? driveLh3(id) : "";
-
-      return `
-        <div class="gym-card">
-          <img class="gym-cover" 
-               src="${url}" 
-              -title">${g.Name}</div>
-            <div class="gym-line">Governorate: <span>${g.Governorate}</span></div>
-            <div class="gym-line">City: <span>${g.City}</span></div>
-            <div class="rating-label">Google Rating</div>
-            <div class="stars">${stars(g._rateNum)}</div>
-          </div>
+    gymsContainer.innerHTML = list.map(g => `
+      <div class="gym-card">
+        ${firstImage(g.Image)}
+        <div class="gym-info">
+          <div class="gym-title">${g.Name}</div>
+          <div class="gym-line">Governorate: <span>${g.Governorate}</span></div>
+          <div class="gym-line">City: <span>${g.City}</span></div>
+          <div class="rating-label">Google Rating</div>
+          <div class="stars">${stars(g._rateNum)}</div>
         </div>
-      `;
-    }).join("");
+      </div>
+    `).join("");
   }
 
 });
@@ -323,3 +320,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
+make adjustments to the whole code
