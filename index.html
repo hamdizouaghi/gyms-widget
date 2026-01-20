@@ -13,20 +13,8 @@
     --card-border: #e5e7eb;
     --shadow: 0 2px 12px rgba(0,0,0,0.08);
     --text-muted: #6b7280;
-    sans-serif;
-    margin: 16px;
-    background: #fafafa;
-  }
-
-  #filters-bar {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .filter-select {
-    padding: 10px 14px;
-    border: 1px solid #d1d5db;
+    --accent: #f5a623;
+  1px solid #d1d5db;
     border-radius: 10px;
     background: #fff;
     font-size: 14px;
@@ -64,13 +52,14 @@
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 6px;
-    color: var(--text-strong);
+    color: #111827;
   }
 
   .gym-line {
     font-size: 14px;
     margin-top: 3px;
   }
+
   .gym-line span {
     color: var(--text-muted);
   }
@@ -86,11 +75,11 @@
     font-size: 18px;
   }
 
-  /* Pagination */
   #pager {
     margin: 20px 0;
     text-align: center;
   }
+
   .pager-btn {
     padding: 8px 12px;
     border: 1px solid #ccc;
@@ -99,8 +88,9 @@
     background: #fff;
     cursor: pointer;
   }
+
   .pager-btn:disabled {
-    opacity: .5;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 </style>
@@ -127,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   const PAGE_SIZE = 12;
 
-  /* ---------------- FILTERS BAR ---------------- */
   filtersBar.innerHTML = `
     <select id="googleRating" class="filter-select">
       <option value="0">Google rating</option>
@@ -141,39 +130,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <select id="governance" class="filter-select">
       <option value="">Governorate</option>
-      <option>Ariana</option><option>Béja</option>
-      <option>Ben Arous</option><option>Bizerte</option>
-      <option>Gabès</option><option>Gafsa</option>
-      <option>Jendouba</option><option>Kairouan</option>
-      <option>Kasserine</option><option>Kebili</option>
-      <option>Kef</option><option>Mahdia</option>
-      <option>Manouba</option><option>Medenine</option>
-     >
-      <option>Sfax</option><option>Sidi Bouzid</option>
-      <option>Siliana</option><option>Sousse</option>
-      <option>Tataouine</option><option>Tozeur</option>
-      <option>Tunis</option><option>Zaghouan</option>
+      <option>Ariana</option>
+      <option>Béja</option>
+      <option>Ben Arous</option>
+      <option>Bizerte</option>
+      <option>Gabès</option>
+      <option>Gafsa</option>
+      <option>Jendouba</option>
+      <option>Kairouan</option>
+      <option>Kasserine</option>
+      <option>Kebili</option>
+      <option>Kef</option>
+      <option>Mahdia</option>
+      <option>Manouba</option>
+      <option>Medenine</option>
+      <option>Monastir</option>
+      <option>Nabeul</option>
+      <option>Sfax</option>
+      <option>Sidi Bouzid</option>
+      <option>Siliana</option>
+      <option>Sousse</option>
+      <option>Tataouine</option>
+      <option>Tozeur</option>
+      <option>Tunis</option>
+      <option>Zaghouan</option>
     </select>
 
     <select id="cityFilter" class="filter-select" disabled>
       <option value="">City</option>
     </select>
- .getElementById("cityFilter");
+  `;
 
-  /* ---------------- FETCH SHEET ---------------- */
+  const ratingSelect = document.getElementById("googleRating");
+  const govSelect = document.getElementById("governance");
+  const citySelect = document.getElementById("cityFilter");
+
   fetch(SHEET_URL)
-    .then(res => res.json())
-    .then(data => {
-      gymsData = data.map(row => ({
-        ...row,
-        Image: (row.image ?? row.Image ?? "").trim(),
-        _rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
+   rateNum: parseFloat(String(row.Rate || "").replace(",", "."))
       }));
 
-     >";
+      refreshCityOptions();
+      applyFilters();
     });
 
-  /* ---------------- FILTER LOGIC ---------------- */
   function applyFilters() {
     const minRate = parseFloat(ratingSelect.value);
     const gov = govSelect.value.trim();
@@ -212,7 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
   govSelect.onchange = () => { refreshCityOptions(); applyFilters(); };
   citySelect.onchange = applyFilters;
 
-  /* ---------------- PAGE RENDER ---------------- */
   function renderPage() {
     const total = filteredData.length;
     const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -237,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("next").onclick = () => { currentPage++; renderPage(); };
   }
 
-  /* ---------------- UTILITIES ---------------- */
   function normalizeImage(url) {
     if (!url) return "";
     const file = url.match(/\/d\/([A-Za-z0-9_-]+)/);
@@ -261,7 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return "★".repeat(f) + (half ? "☆" : "") + "✩".repeat(empty);
   }
 
-  /* ---------------- RENDER CARDS ---------------- */
   function renderGyms(list) {
     if (!list.length) {
       gymsContainer.innerHTML = "<p>No results.</p>";
